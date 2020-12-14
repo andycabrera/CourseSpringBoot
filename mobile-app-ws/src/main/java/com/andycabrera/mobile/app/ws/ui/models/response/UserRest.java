@@ -1,5 +1,4 @@
-package com.andycabrera.mobile.app.ws.iu.models.response;
-
+package com.andycabrera.mobile.app.ws.ui.models.response;
 
 public class UserRest {
 
