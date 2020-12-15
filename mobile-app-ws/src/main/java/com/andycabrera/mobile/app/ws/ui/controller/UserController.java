@@ -6,8 +6,10 @@ import java.util.UUID;
 
 import javax.validation.Valid;
 
+import com.andycabrera.mobile.app.ws.ui.models.request.UpdateUserDetailsRequestModel;
 import com.andycabrera.mobile.app.ws.ui.models.request.UserDetailsRequestModel;
 import com.andycabrera.mobile.app.ws.ui.models.response.UserRest;
+import com.andycabrera.mobile.app.ws.exceptions.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -34,6 +36,8 @@ public class UserController{
             })
     public ResponseEntity<UserRest> getUser(@PathVariable String userId){
 
+        if(true) throw new UserServiceException("A user service exception is thrown");
+
         if(users.containsKey(userId)){
             return new ResponseEntity<UserRest>(users.get(userId), HttpStatus.OK); 
         }else{
@@ -43,6 +47,21 @@ public class UserController{
 
     @PostMapping(
         consumes = {
+            MediaType.APPLICATION_XML_VALUE,
+            MediaType.APPLICATION_JSON_VALUE
+        },
+        produces = {
+            MediaType.APPLICATION_XML_VALUE,
+            MediaType.APPLICATION_JSON_VALUE
+            })
+    public ResponseEntity<UserRest> createUser(@Valid @RequestBody UserDetailsRequestModel userDetails){
+        
+        UserRest returnValue = new UserServiceImp().createUser(userDetails);
+        return new ResponseEntity<UserRest>(returnValue,HttpStatus.OK);
+    }
+
+    @PutMapping(path="/{userId}",
+        consumes = {
         MediaType.APPLICATION_XML_VALUE,
         MediaType.APPLICATION_JSON_VALUE
         },
@@ -50,28 +69,21 @@ public class UserController{
             MediaType.APPLICATION_XML_VALUE,
             MediaType.APPLICATION_JSON_VALUE
             })
-    public ResponseEntity<UserRest> createUser(@Valid @RequestBody UserDetailsRequestModel userDetails){
-        UserRest returnValue = new UserRest();
-        returnValue.setEmail(userDetails.getEmail());
-        returnValue.setFirstName(userDetails.getFirstName());
-        returnValue.setLastName(userDetails.getLastName());
-
-        String userId = UUID.randomUUID().toString();
-        returnValue.setUserId(userId);
+    public UserRest updateUser(@PathVariable("userId") String userId, @Valid @RequestBody UpdateUserDetailsRequestModel userDetails){
         
-        if(users == null) users = new HashMap<>();
-        users.put(userId, returnValue);
-    
-        return new ResponseEntity<UserRest>(returnValue,HttpStatus.OK);
+        UserRest storedUserDetails = users.get(userId);
+        storedUserDetails.setFirstName(userDetails.getFirstName());
+        storedUserDetails.setLastName(userDetails.getLastName());
+
+        users.put(userId, storedUserDetails);
+        return storedUserDetails;
+        
     }
 
-    @PutMapping
-    public String updateUser(){
-        return "update user was colled!";
-    }
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") String id){
+        users.remove(id);
 
-    @DeleteMapping
-    public String deleteUser(){
-        return "delete user was colled!";
+        return ResponseEntity.noContent().build();
     }
 }
